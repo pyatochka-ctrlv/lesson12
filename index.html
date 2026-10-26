@@ -148,6 +148,30 @@ button{font:inherit;color:inherit}
 .mc-gap{display:block;height:8px}
 .mc-loop.hl{outline:4px solid #ffd400;outline-offset:2px}
 
+/* Питання про слоти: пляшка → інвентар агента → блок коду */
+.qpanel{position:relative}
+.slots-row{display:flex;align-items:center;gap:18px}
+.bottle{position:relative;display:flex;flex-direction:column;align-items:center;width:66px;margin-right:56px}
+.bottle .cork{width:22px;height:22px;background-image:var(--tex-oak);background-size:22px 22px;image-rendering:pixelated;
+  outline:3px solid #ffc400;outline-offset:1px;animation:pulse 1.4s ease-in-out infinite}
+.bottle .neck{width:44px;height:22px}
+.bottle .body{width:66px;height:66px}
+.bottle .neck,.bottle .body{background-color:rgba(60,140,60,.35);background-image:var(--icon-glass);background-size:22px 22px;image-rendering:pixelated}
+.bottle .cork-label{position:absolute;top:0;left:50px;white-space:nowrap;font-weight:900;font-size:17px;color:#5a3a00}
+@keyframes pulse{0%,100%{outline-color:#ffc400;box-shadow:0 0 0 0 rgba(255,196,0,.0)}50%{outline-color:#fff1a0;box-shadow:0 0 0 5px rgba(255,196,0,.45)}}
+.inv-title{font-weight:900;font-size:17px;color:#333;margin-bottom:4px;text-align:center}
+.inv{display:flex;gap:12px}
+.inv-cell{display:flex;flex-direction:column;align-items:center;width:92px;text-align:center}
+.inv-slot{width:58px;height:58px;display:grid;place-items:center;background:#8b8b8b;
+  box-shadow:inset 3px 3px 0 #373737,inset -3px -3px 0 #fff;transition:outline-color .2s}
+.inv-slot .mat{width:40px;height:40px;background-size:40px 40px;box-shadow:none}
+.inv-slot.ok{outline:4px solid #2fbf3a;outline-offset:1px}
+.inv-slot.peek{outline:4px solid #fff;outline-offset:1px}
+.inv-num{font-family:var(--px);font-size:15px;color:#222;margin-top:5px}
+.inv-label{font-weight:800;font-size:15px;color:#333;line-height:1.1}
+.flyer{position:absolute;z-index:5;width:22px;height:22px;pointer-events:none;
+  background-image:var(--tex-oak);background-size:22px 22px;image-rendering:pixelated;box-shadow:0 0 0 2px #3a2610}
+
 /* Старт / проміжний / фінал */
 .intro{font-size:28px;font-weight:800;line-height:1.35}
 .big-btn{align-self:flex-start;min-width:280px;font-size:20px;min-height:64px}
@@ -238,6 +262,7 @@ button{font:inherit;color:inherit}
 
 @media (prefers-reduced-motion: reduce){
   .shake{animation:none}
+  .bottle .cork{animation:none}
   #toast{transition:none}
 }
 
@@ -308,10 +333,16 @@ const QUESTIONS = [
   },
   {
     text: 'Будуємо корок. Який слот активуємо?',
-    options: ['Слот 1', 'Слот 2'],
+    // схема: пляшка з корком → інвентар агента → блок коду; [ ? ] заміниться на номер правильного слота
+    visual: {
+      type: 'slots',
+      slots: [ { icon: 'glass', label: 'зелене скло' }, { icon: 'oak', label: 'дубові дошки' } ],
+      block: 'агент активувати слот [ ? ]'
+    },
+    options: [ { text: 'Слот 1', icon: 'glass' }, { text: 'Слот 2', icon: 'oak' } ],
     correct: 2,
-    hint: "Корок дерев'яний. У який слот ми клали дубові дошки?",
-    explain: 'У слоті 2 — дубові дошки для корка.'
+    hint: 'Подивись на пляшку: з чого зроблений корок? А тепер знайди цей блок в інвентарі агента.',
+    explain: 'Корок дерев\'яний, а дубові дошки лежать у слоті 2. Тому активуємо слот 2!'
   },
   {
     text: 'Куди агент кладе блоки, коли будує пляшку?',
@@ -750,6 +781,16 @@ function visualHTML(v) {
       `<figure class="loopset">${s.caption ? `<figcaption>${s.caption}</figcaption>` : ''}${loopHTML(s.counts, 0, s.highlight, s.inner)}</figure>`
     ).join('') + '</div>';
   }
+  if (v.type === 'slots') {
+    const cells = v.slots.map((s, i) =>
+      `<div class="inv-cell"><div class="inv-slot" data-slot="${i}"><span class="mat mat-${s.icon}"></span></div>` +
+      `<div class="inv-num">${i + 1}</div><div class="inv-label">${s.label}</div></div>`).join('');
+    return `<div class="visual slots-row">` +
+      `<div class="bottle"><div class="cork"></div><div class="neck"></div><div class="body"></div><div class="cork-label">◀ корок</div></div>` +
+      `<div><div class="inv-title">Інвентар агента</div><div class="inv">${cells}</div></div>` +
+      `<div>${blockHTML(v.block, 'agent').replace('class="pill"', 'class="pill" id="slotPill"')}</div>` +
+      `</div>`;
+  }
   return '';
 }
 function fingers(n) { return n === 2 ? '1 або 2 пальці' : '1, 2 або 3 пальці'; }
@@ -821,6 +862,10 @@ function applyQuizState() {
     b.classList.toggle('dim', st.solved && !isCorrect && !st.wrong.includes(i));
     b.disabled = st.solved || st.wrong.includes(i);
   });
+  if (q.visual && q.visual.type === 'slots' && st.solved) {
+    document.getElementById('slotPill').textContent = q.correct;
+    left.querySelector(`.inv-slot[data-slot="${q.correct - 1}"]`).classList.add('ok');
+  }
   const fb = document.getElementById('fb');
   if (st.solved) document.getElementById('hint').classList.add('hidden');
   if (st.solved) fb.innerHTML = `<span class="ok">${TEXT.correct}</span>${q.explain}`;
@@ -947,6 +992,9 @@ function answer(i) {
   applyQuizState();
   shake(left.querySelector(`.opt[data-opt="${i}"]`));
   document.getElementById('fb').innerHTML = `<span class="try">${TEXT.tryAgain}</span>`;
+  // у питанні про слоти на мить підсвічуємо обраний слот, щоб було видно, що в ньому лежить
+  const slot = left.querySelector(`.inv-slot[data-slot="${i}"]`);
+  if (slot) { slot.classList.add('peek'); setTimeout(() => slot.classList.remove('peek'), 900); }
 }
 
 // Зараховує правильну відповідь (і для кліку, і для «Показати відповідь»)
@@ -958,10 +1006,36 @@ function solveQuestion() {
   SP.segFlash[SP.filled - 1] = performance.now();
   applyQuizState();
   updateTeacher();
+  const q = QUESTIONS[qi];
+  if (q.visual && q.visual.type === 'slots') flyToCork(q.correct - 1);
   if (qState.every(s => s.solved) && !toastShown.filled) {
     toastShown.filled = true;
     showToast(TEXT.achFilled);
   }
+}
+
+// Маленька копія блоку пролітає зі слота до корка пляшки
+function flyToCork(slotIndex) {
+  if (reducedMotion) return;
+  const panel = left.querySelector('.qpanel');
+  const from = left.querySelector(`.inv-slot[data-slot="${slotIndex}"]`);
+  const to = left.querySelector('.bottle .cork');
+  if (!panel || !from || !to) return;
+  const p = panel.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  const sc = stageScale;
+  const x0 = (a.left + a.width / 2 - p.left) / sc - 11, y0 = (a.top + a.height / 2 - p.top) / sc - 11;
+  const x1 = (b.left + b.width / 2 - p.left) / sc - 11, y1 = (b.top + b.height / 2 - p.top) / sc - 11;
+  const f = document.createElement('div');
+  f.className = 'flyer';
+  f.style.left = x0 + 'px'; f.style.top = y0 + 'px';
+  panel.appendChild(f);
+  const dx = x1 - x0, dy = y1 - y0;
+  f.animate([
+    { transform: 'translate(0,0) scale(1.4)' },
+    { transform: `translate(${dx / 2}px, ${dy / 2 - 40}px) scale(1.2)`, offset: 0.5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(1)`, opacity: 1, offset: 0.9 },
+    { transform: `translate(${dx}px, ${dy}px) scale(1)`, opacity: 0 }
+  ], { duration: 900, easing: 'ease-in-out' }).onfinish = () => f.remove();
 }
 
 /* =========================================================
