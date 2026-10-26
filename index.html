@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Запали бенгальський вогник — Урок 12</title>
+<!-- Шрифти з Google Fonts. Якщо не завантажаться — спрацюють системні запасні шрифти. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tiny5&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   БАЗОВІ ЗМІННІ
+   ========================================================= */
+:root{
+  --night:#1a1430;
+  --px:'Tiny5','Courier New',ui-monospace,monospace;   /* піксельний шрифт */
+  --sans:'Nunito','Segoe UI',Roboto,Arial,sans-serif;          /* читабельний шрифт */
+  --ink:#1e1e1e;
+  --wood-ink:#2a1808;
+  --ok:#7dff7d;
+  --agent:#d83b01;       /* блоки агента в стилі MakeCode */
+  --loop:#1f9a46;        /* цикли «повторити» */
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--night);color:#fff;font-family:var(--sans);overflow:hidden}
+button{font:inherit;color:inherit}
+
+/* Сцена 16:9. Малюється у 1280×720 і масштабується під вікно */
+#stage{
+  position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;
+  background-color:var(--night);background-image:var(--tex-bg);background-size:64px 64px;
+  image-rendering:pixelated;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#main{flex:1;min-height:0;display:grid;grid-template-columns:60% 40%}
+#left{min-height:0;overflow:hidden;padding:12px 24px 8px 30px;display:flex;flex-direction:column;gap:8px}
+#right{position:relative;min-height:0}
+#sparkWrap{position:absolute;inset:14px;display:flex;align-items:center;justify-content:center}
+#spark{display:block;image-rendering:pixelated}
+
+/* =========================================================
+   ЕЛЕМЕНТИ В СТИЛІ MINECRAFT
+   ========================================================= */
+/* Кам'яна кнопка, як у меню */
+.stone{
+  position:relative;display:flex;align-items:center;gap:14px;
+  font-family:var(--px);font-weight:400;font-size:28px;color:#fff;text-align:left;
+  text-shadow:2px 2px 0 #333;
+  background-color:#7e7e7e;background-image:var(--tex-stone);background-size:48px 48px;
+  border:3px solid #111;
+  box-shadow:inset 3px 3px 0 rgba(255,255,255,.5),inset -3px -4px 0 rgba(0,0,0,.45);
+  min-height:58px;padding:5px 18px 5px 8px;cursor:pointer;
+}
+.stone::before{content:"";position:absolute;inset:0;pointer-events:none}
+.stone > *{position:relative;z-index:1}
+.stone:hover:not(:disabled){border-color:#fff}
+.stone:hover:not(:disabled)::before{background:rgba(120,140,255,.18)}
+.stone:active:not(:disabled){box-shadow:inset -3px -3px 0 rgba(255,255,255,.4),inset 3px 4px 0 rgba(0,0,0,.45)}
+.stone:disabled{cursor:default}
+.stone:focus{outline:none}
+.stone:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}
+.stone.center{justify-content:center;padding:6px 28px;text-align:center}
+
+/* Слот інвентаря з номером */
+.badge{
+  flex:none;width:46px;height:46px;display:grid;place-items:center;
+  background:#8b8b8b;box-shadow:inset 3px 3px 0 #373737,inset -3px -3px 0 #fff;
+  font-size:32px;line-height:1;color:#fff;text-shadow:2px 2px 0 #3f3f3f;
+}
+
+/* Вікно інвентаря (панель питання) */
+.panel{
+  background:#c6c6c6;color:var(--ink);
+  border:3px solid #111;
+  box-shadow:inset 4px 4px 0 #fff,inset -4px -4px 0 #555;
+  padding:13px 20px;
+}
+
+/* Дерев'яна табличка */
+.sign{
+  display:inline-block;align-self:flex-start;
+  font-family:var(--px);font-weight:400;font-size:30px;color:#fff;
+  text-shadow:2px 2px 0 #2a1808,-1px -1px 0 #2a1808,1px -1px 0 #2a1808,-1px 1px 0 #2a1808;
+  background-color:#a4834f;background-image:var(--tex-oak);background-size:48px 48px;
+  border:3px solid #3a2610;
+  box-shadow:inset 3px 3px 0 rgba(255,255,255,.28),inset -3px -3px 0 rgba(0,0,0,.3),0 4px 0 rgba(0,0,0,.35);
+  padding:6px 20px;
+}
+
+/* Золотиста табличка з підказкою */
+.hint{
+  background:#f2c94c;color:#3a2500;font-weight:800;font-size:24px;line-height:1.25;
+  border:3px solid #6e4400;
+  box-shadow:inset 3px 3px 0 #fff3b8,inset -3px -3px 0 #c58b12;
+  padding:6px 16px;
+}
+.hidden{display:none !important}
+
+/* =========================================================
+   ЕКРАНИ
+   ========================================================= */
+.head-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none}
+.counter{font-family:var(--px);font-size:26px;color:#e2d9ff;text-shadow:2px 2px 0 #000}
+.qpanel{flex:none}
+.qtext{font-size:29px;font-weight:900;line-height:1.22}
+.qpanel.side{display:flex;align-items:center;gap:22px}
+.qpanel.side .qtext{flex:1}
+.visual{margin-top:12px;display:flex;gap:22px;align-items:flex-start}
+.qpanel.side .visual{margin-top:0;flex:none}
+.instr{font-size:22px;font-weight:800;line-height:1.2;color:#d8ceff;flex:none}
+.options{display:flex;flex-direction:column;gap:8px;flex:none}
+.opt{width:100%}
+.opt .otext{flex:1}
+.opt .tick{margin-left:auto;font-size:30px;color:#bfffbf;display:none}
+.opt.correct{border-color:#0f3d0f}
+.opt.correct::before{background:rgba(40,170,40,.72)}
+.opt.correct .tick{display:inline}
+.opt.wrong{filter:brightness(.5) saturate(.5)}
+.opt.dim{opacity:.55}
+.feedback{min-height:34px;font-size:24px;font-weight:800;line-height:1.25;flex:none}
+.feedback .ok{font-family:var(--px);font-weight:400;font-size:27px;color:var(--ok);text-shadow:2px 2px 0 #000;margin-right:10px}
+.feedback .try{font-family:var(--px);font-weight:400;font-size:27px;color:#ffcf6e;text-shadow:2px 2px 0 #000}
+.feedback .info{color:#ffe08a}
+
+/* Матеріали (маленькі піксельні блоки) */
+.mat{flex:none;width:36px;height:36px;background-size:36px 36px;image-rendering:pixelated;
+  box-shadow:0 0 0 2px #222}
+.mat-oak{background-image:var(--tex-oak)}
+.mat-stone{background-image:var(--tex-stone)}
+.mat-glass{background-image:var(--icon-glass);background-color:rgba(60,140,60,.35)}
+
+/* Блоки коду в стилі MakeCode */
+.mc{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-weight:900;font-size:20px;
+  color:#fff;text-shadow:none;padding:5px 12px;border-radius:6px;border:2px solid rgba(0,0,0,.28);white-space:nowrap}
+.mc.agent{background:var(--agent)}
+.mc.big{font-size:24px;padding:6px 14px}
+.mc.small{font-size:16px;padding:3px 8px}
+.pill{background:#fff;color:#333;border-radius:14px;padding:0 10px;min-width:26px;text-align:center}
+.loopset{margin:0}
+.loopset figcaption{font-weight:900;font-size:20px;margin-bottom:4px;color:#333}
+.mc-loop{display:inline-flex;flex-direction:column;align-items:flex-start;border-radius:6px}
+.mc-head{background:var(--loop);color:#fff;font-weight:900;font-size:18px;padding:2px 10px;border-radius:6px 6px 6px 0;
+  display:flex;align-items:center;gap:6px;white-space:nowrap}
+.mc-head .pill{font-size:18px}
+.mc-body{border-left:14px solid var(--loop);padding:2px 0 2px 2px;min-height:10px}
+.mc-foot{background:var(--loop);height:8px;width:46px;border-radius:0 0 6px 6px}
+.mc-gap{display:block;height:8px}
+.mc-loop.hl{outline:4px solid #ffd400;outline-offset:2px}
+
+/* Старт / проміжний / фінал */
+.intro{font-size:28px;font-weight:800;line-height:1.35}
+.big-btn{align-self:flex-start;min-width:280px;font-size:30px;min-height:64px}
+.screen-center{margin:auto 0;display:flex;flex-direction:column;gap:22px}
+.sign.big{font-size:34px;padding:10px 26px}
+
+/* Частина 2: знайди пару */
+.match{display:grid;grid-template-columns:230px 1fr;gap:14px;flex:none;padding:4px}
+.col{display:flex;flex-direction:column;gap:8px}
+.ore{
+  position:relative;height:64px;display:flex;align-items:center;padding:0 46px 0 16px;cursor:pointer;
+  font-family:var(--px);font-weight:400;font-size:32px;
+  text-shadow:2px 2px 0 #000,-1px -1px 0 #000,0 0 6px #000;
+  background-color:#7e7e7e;background-size:64px 64px;
+  border:3px solid #111;box-shadow:inset 3px 3px 0 rgba(255,255,255,.45),inset -3px -4px 0 rgba(0,0,0,.45);
+  user-select:none;
+}
+.ore::before,.mean::before{content:"";position:absolute;inset:0;pointer-events:none}
+.ore > *,.mean > *{position:relative;z-index:1}
+.ore:hover:not(.done){border-color:#fff}
+.ore.sel{outline:5px solid #ffd54a;outline-offset:1px;border-color:#ffd54a}
+.ore.c0{background-image:var(--ore-0);color:#c6ecff}
+.ore.c1{background-image:var(--ore-1);color:#c9ffd2}
+.ore.c2{background-image:var(--ore-2);color:#ffd0d0}
+.ore.c3{background-image:var(--ore-3);color:#fff0b0}
+.ore.c4{background-image:var(--ore-4);color:#f0d4ff}
+.say{position:absolute !important;top:5px;right:5px;width:34px;height:30px;padding:0;font-size:16px;line-height:1;
+  background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.7);border-radius:3px;cursor:pointer}
+.say:hover{background:rgba(0,0,0,.75)}
+.mean{
+  position:relative;min-height:64px;display:flex;align-items:center;padding:3px 36px 3px 16px;cursor:pointer;
+  font-size:22px;font-weight:700;line-height:1.15;color:var(--wood-ink);
+  background-color:#a4834f;background-image:var(--tex-oak);background-size:48px 48px;
+  border:3px solid #3a2610;box-shadow:inset 3px 3px 0 rgba(255,255,255,.28),inset -3px -3px 0 rgba(0,0,0,.3);
+  user-select:none;
+}
+.mean b{font-weight:900}
+.mean:hover:not(.done){border-color:#fff}
+.done{cursor:default}
+.done::before{background:rgba(70,200,70,.55)}
+.done::after{content:"✔";position:absolute;right:10px;bottom:4px;font-size:22px;color:#fff;text-shadow:2px 2px 0 #0a3a0a;z-index:2}
+.ore.done .say{display:none}
+
+/* Фінал */
+.slots{display:flex;gap:12px}
+.slot{width:76px;height:76px;padding:0;border:none;cursor:pointer;display:grid;place-items:center;
+  background:#8b8b8b;box-shadow:inset 4px 4px 0 #373737,inset -4px -4px 0 #fff}
+.slot i{display:block;width:46px;height:46px;box-shadow:inset 3px 3px 0 rgba(255,255,255,.45),inset -3px -3px 0 rgba(0,0,0,.4)}
+.slot.on{outline:5px solid #fff;outline-offset:2px}
+.slot:focus{outline-color:transparent}
+.slot.on:focus{outline:5px solid #fff}
+.wave{font-family:var(--px);font-weight:400;font-size:44px;line-height:1.2;text-shadow:3px 3px 0 #000}
+.label{font-size:26px;font-weight:800}
+
+/* =========================================================
+   ПАНЕЛЬ ВЧИТЕЛЯ
+   ========================================================= */
+#teacher{
+  flex:none;height:80px;display:flex;align-items:center;justify-content:center;gap:20px;
+  background-color:#2e2e34;background-image:var(--tex-deep);background-size:48px 48px;
+  border-top:3px solid #0c0c0c;box-shadow:inset 0 3px 0 #5a5a63;
+}
+#teacher.off{visibility:hidden}
+.tbtn{min-height:56px;font-size:27px;padding:6px 26px;justify-content:center}
+.tbtn.on::before{background:rgba(255,213,74,.3)}
+.tbtn:disabled{opacity:.4;filter:grayscale(1)}
+#stage.final #teacher{display:none}
+#stage.final #main{grid-template-columns:52% 48%}
+#stage.final #sparkWrap{inset:4px}
+
+/* =========================================================
+   «ДОСЯГНЕННЯ ОТРИМАНО!»
+   ========================================================= */
+#toast{
+  position:absolute;top:16px;right:16px;z-index:20;width:410px;display:flex;align-items:center;gap:14px;
+  background:#212121;border:3px solid #000;box-shadow:inset 0 0 0 3px #5b5b5b;padding:12px 16px;
+  transform:translateX(130%);transition:transform .25s ease-out;
+}
+#toast.show{transform:none}
+#toast .ico{flex:none;width:52px;height:52px;display:grid;place-items:center;font-size:30px;
+  background:#8b8b8b;box-shadow:inset 3px 3px 0 #373737,inset -3px -3px 0 #fff}
+#toast .t1{font-family:var(--px);font-size:24px;color:#ffff55;text-shadow:2px 2px 0 #3f3f00}
+#toast .t2{font-family:var(--px);font-size:24px;color:#fff;text-shadow:2px 2px 0 #333;margin-top:2px}
+
+/* Легке потрушування */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .35s ease-in-out}
+
+@media (prefers-reduced-motion: reduce){
+  .shake{animation:none}
+  #toast{transition:none}
+}
+
+/* =========================================================
+   ВУЗЬКІ ЕКРАНИ: вогник — смуга над питанням
+   ========================================================= */
+html.narrow, html.narrow body{overflow:auto}
+html.narrow #stage{position:relative;width:100%;height:auto;min-height:100%;transform:none !important}
+html.narrow #main{display:flex;flex-direction:column}
+html.narrow #right{order:-1;height:170px;flex:none}
+html.narrow #sparkWrap{inset:6px}
+html.narrow #left{overflow:visible;padding:12px 14px}
+html.narrow .qpanel.side{flex-direction:column;align-items:flex-start}
+html.narrow .match{grid-template-columns:1fr 1.6fr}
+html.narrow #teacher{position:sticky;bottom:0;height:auto;padding:8px;gap:8px;flex-wrap:wrap}
+html.narrow .tbtn{font-size:20px;padding:6px 12px}
+html.narrow #toast{width:auto;left:16px}
+html.narrow .stone{font-size:22px}
+html.narrow .qtext{font-size:26px}
+html.narrow .sign{font-size:24px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="main">
+    <section id="left" aria-live="polite"></section>
+    <aside id="right"><div id="sparkWrap"><canvas id="spark" aria-label="Бенгальський вогник"></canvas></div></aside>
+  </div>
+  <footer id="teacher" class="off">
+    <button class="stone tbtn" id="btnHint">💡 Підказка</button>
+    <button class="stone tbtn" id="btnShow">Показати відповідь</button>
+    <button class="stone tbtn" id="btnNext">Далі</button>
+  </footer>
+  <div id="toast" role="status"><div class="ico">🎇</div><div><div class="t1">Досягнення отримано!</div><div class="t2" id="toastText"></div></div></div>
+</div>
+
+<script>
+/* =========================================================
+   ДАНІ ГРИ — редагуй тут
+   correct — номер правильного варіанта (1, 2 або 3)
+   ========================================================= */
+const QUESTIONS = [
+  {
+    text: 'Що відбувається в конструкторі сполук?',
+    options: ['Елементи поєднуються в нову речовину', 'Агент будує зілля', 'Блоки ламаються'],
+    correct: 1,
+    hint: 'Згадай: 2 Гідрогени + 1 Оксиген = вода.',
+    explain: "Елементи з'єднуються — і виходить сполука, наприклад вода."
+  },
+  {
+    text: 'Яка команда повертає агента до тебе?',
+    optionKind: 'agent',               // варіанти малюються як блоки агента; [слово] — біле віконце
+    options: ['агент переміститися [вперед]', 'агент телепортуватися до гравця', 'агент розмістити [вниз]'],
+    correct: 2,
+    hint: 'Ця команда переносить агента одразу до гравця.',
+    explain: 'Спершу агент телепортується до гравця, а потім іде вперед на 3 кроки.'
+  },
+  {
+    text: 'З якого матеріалу ми будували тіло пляшки?',
+    options: [
+      { text: 'Дубові дошки', icon: 'oak' },
+      { text: 'Камінь', icon: 'stone' },
+      { text: 'Зелене скло', icon: 'glass' }
+    ],
+    correct: 3,
+    hint: 'Згадай, якого кольору наше зілля.',
+    explain: 'Зелене скло лежало в слоті 1 — з нього тіло пляшки.'
+  },
+  {
+    text: 'Будуємо корок. Який слот активуємо?',
+    options: ['Слот 1', 'Слот 2'],
+    correct: 2,
+    hint: "Корок дерев'яний. У який слот ми клали дубові дошки?",
+    explain: 'У слоті 2 — дубові дошки для корка.'
+  },
+  {
+    text: 'Куди агент кладе блоки, коли будує пляшку?',
+    visual: { type: 'block', block: 'агент розмістити [ ? ]' },
+    options: ['Вгору ⬆', 'Вниз, під себе ⬇', 'Праворуч ➡'],
+    correct: 2,
+    hint: 'Агент піднімається вгору і будує знизу — блоки опиняються під ним.',
+    explain: 'Агент кладе блоки вниз, під себе, і піднімається вгору.'
+  },
+  {
+    text: 'У коді тіла пляшки є три цикли. Що рахує «повторити 4 рази»?',
+    visual: { type: 'loops', side: true, sets: [ { counts: [3, 4, 3], highlight: 1, inner: 'агент розмістити [вниз]' } ] },
+    options: ['Яруси', 'Сторони квадрата', 'Кроки'],
+    correct: 2,
+    hint: 'Тіло пляшки зверху — квадрат. Скільки сторін у квадрата?',
+    explain: '3 яруси, 4 сторони, 3 кроки на кожній стороні.'
+  },
+  {
+    text: 'Чому шийка пляшки вужча за тіло?',
+    visual: { type: 'loops', side: true, sets: [ { caption: 'Тіло', counts: [3, 4, 3] }, { caption: 'Шийка', counts: [2, 4, 2] } ] },
+    options: ['Агент робить менше кроків на кожній стороні', 'Агент кладе інші блоки', 'Агент рухається швидше'],
+    correct: 1,
+    hint: 'Порівняй останнє число в коді тіла і в коді шийки.',
+    explain: 'У шийці 2 кроки на сторону замість 3 — тому вона вужча.'
+  },
+  {
+    text: 'Навіщо нам цикл?',
+    options: ['Щоб агент зупинився', 'Щоб повторювати команди багато разів', 'Щоб змінити колір блоку'],
+    correct: 2,
+    hint: 'Без циклу довелося б писати одну й ту саму команду знову і знову.',
+    explain: 'Цикл повторює команди, і код стає коротким.'
+  }
+];
+
+// Пари «англійське слово — значення». Колір руди йде за порядком: блакитний, зелений, червоний, золотий, фіолетовий.
+const PAIRS = [
+  { en: 'element',  ua: 'елемент',             desc: 'речовина, яку не можна розкласти на простіші (золото, кисень)', hint: 'Золото, кисень, залізо — це…' },
+  { en: 'compound', ua: 'сполука',             desc: 'кілька елементів разом (вода H₂O)',                               hint: 'Вода — це два Гідрогени і один Оксиген разом.' },
+  { en: 'sparkler', ua: 'бенгальський вогник', desc: 'паличка, яка горить і кидає іскри',                               hint: 'Горить на Новий рік і кидає іскри ✨' },
+  { en: 'lab',      ua: 'лабораторія',         desc: 'місце, де роблять досліди',                                       hint: 'Тут працюють науковці й алхіміки.' },
+  { en: 'material', ua: 'матеріал',            desc: "з чого щось будують (зелене скло, дубові дошки)",                 hint: 'З нього ми будували пляшку зілля.' }
+];
+
+// Тексти екранів
+const TEXT = {
+  title: 'Запали бенгальський вогник',
+  intro: 'У лабораторії Академії лежить незапалений бенгальський вогник. Відповідай на питання, щоб наповнити його чарівним порошком, а потім знайди пари для англійських слів, щоб його запалити!',
+  part1: 'Частина 1. Тест',
+  part2: 'Частина 2. Знайди пару',
+  midTitle: 'Вогник наповнено!',
+  mid: "Тепер запалимо його: знайди пару для п'яти англійських слів.",
+  matchInstr: 'Клацніть англійське слово ⛏, а потім — його значення 📜',
+  pickWordFirst: 'Спершу обери англійське слово ⛏',
+  correct: '✔ Правильно!',
+  tryAgain: 'Спробуй ще!',
+  finalTitle: 'Вогник запалено! 🎇',
+  pickColor: 'Оберіть колір вогника:',
+  wave: 'Помахайте своїм вогником на камеру! 👋✨',
+  again: 'Грати ще раз',
+  achFilled: 'Вогник наповнено',
+  achLit: 'Вогник запалено'
+};
+
+// Кольори іскор: [світлий, основний, темний]
+const COLORS = {
+  gold:   ['#fff7d1', '#ffd54a', '#ff9f1a'],
+  red:    ['#ffe3e3', '#ff5a5a', '#c81e1e'],
+  blue:   ['#e3f2ff', '#4fb3ff', '#1e5bd8'],
+  green:  ['#e6ffe9', '#5be37a', '#15994a'],
+  purple: ['#f6e6ff', '#c77dff', '#7b2cbf']
+};
+
+/* =========================================================
+   ПІКСЕЛЬНІ ТЕКСТУРИ (малюються кодом)
+   ========================================================= */
+const reducedMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Простий генератор псевдовипадкових чисел, щоб текстури були однаковими щоразу
+function rng(seed) {
+  return function () {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function pick(r, list) { return list[Math.floor(r() * list.length)]; }
+
+// Малює текстуру size×size і повертає її як url(...) для CSS
+function makeTexture(size, seed, paint) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  paint(g, rng(seed), size);
+  return 'url(' + c.toDataURL() + ')';
+}
+function dot(g, x, y, col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); }
+
+const STONE = ['#7f7f7f', '#7f7f7f', '#868686', '#8f8f8f', '#747474', '#6c6c6c', '#9a9a9a'];
+function paintStone(g, r, s) {
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) dot(g, x, y, pick(r, STONE));
+}
+function paintOre(colors) {
+  return function (g, r, s) {
+    paintStone(g, r, s);
+    // кілька маленьких кольорових вкраплень
+    const spots = [[2, 2], [10, 3], [5, 9], [12, 11], [1, 13]];
+    spots.forEach(([sx, sy]) => {
+      const cells = [[0, 0], [1, 0], [0, 1], [1, 1], [2, 1]];
+      cells.forEach(([dx, dy]) => { if (r() < 0.8) dot(g, sx + dx, sy + dy, pick(r, colors)); });
+    });
+  };
+}
+function paintOak(g, r, s) {
+  const base = ['#b08d57', '#a4834f', '#9e7e4a', '#b6935c', '#a88752'];
+  for (let y = 0; y < s; y++) {
+    const plank = Math.floor(y / 4);
+    const seam = (plank * 7 + 3) % s;
+    for (let x = 0; x < s; x++) {
+      let col = pick(r, base);
+      if (y % 4 === 3) col = '#6f5531';
+      else if (x === seam) col = '#7d6139';
+      dot(g, x, y, col);
+    }
+  }
+}
+function paintNight(g, r, s) {
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+    const v = r();
+    dot(g, x, y, v < 0.75 ? '#1a1430' : v < 0.88 ? '#1d1734' : v < 0.97 ? '#18122c' : '#211a3a');
+  }
+}
+function paintDeep(g, r, s) {
+  const cols = ['#33333a', '#2e2e34', '#38383f', '#2a2a30'];
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) dot(g, x, y, pick(r, cols));
+}
+function paintGlass(g, r, s) {
+  g.clearRect(0, 0, s, s);
+  g.fillStyle = 'rgba(140,230,140,.45)'; g.fillRect(1, 1, s - 2, s - 2);
+  g.fillStyle = '#2f7d32';
+  g.fillRect(0, 0, s, 1); g.fillRect(0, s - 1, s, 1); g.fillRect(0, 0, 1, s); g.fillRect(s - 1, 0, 1, s);
+  [[3, 3], [4, 4], [5, 5], [3, 4], [10, 9], [11, 10], [12, 11]].forEach(([x, y]) => dot(g, x, y, '#ecffec'));
+}
+
+function installTextures() {
+  const root = document.documentElement.style;
+  root.setProperty('--tex-stone', makeTexture(16, 11, paintStone));
+  root.setProperty('--tex-oak', makeTexture(16, 22, paintOak));
+  root.setProperty('--tex-bg', makeTexture(16, 33, paintNight));
+  root.setProperty('--tex-deep', makeTexture(16, 44, paintDeep));
+  root.setProperty('--icon-glass', makeTexture(16, 55, paintGlass));
+  const ores = [
+    ['#4fc3f7', '#1e88e5', '#9be7ff'],  // блакитний
+    ['#5be37a', '#17a34a', '#a8ffb8'],  // зелений
+    ['#ff5252', '#c62828', '#ff9a9a'],  // червоний
+    ['#ffd54f', '#f9a825', '#fff1a8'],  // золотий
+    ['#ce93d8', '#8e24aa', '#f0c8ff']   // фіолетовий
+  ];
+  ores.forEach((c, i) => root.setProperty('--ore-' + i, makeTexture(16, 66 + i, paintOre(c))));
+}
+installTextures();
+
+/* =========================================================
+   БЕНГАЛЬСЬКИЙ ВОГНИК (canvas)
+   Логічна сітка W×H «пікселів», кожен малюється квадратом k×k.
+   ========================================================= */
+const SP = {
+  W: 72, H: 100, SEGS: 8, SOCKETS: 5,
+  filled: 0, lit: 0, burning: false, color: 'gold',
+  segFlash: {}, sockFlash: {}, parts: [], emitAcc: 0,
+  horizontal: false, k: 4
+};
+const WIRE_X = 35;                 // дріт займає стовпчики 35 і 36
+const COAT_X = 33, COAT_W = 6;     // покриття: 33..38
+const SEG_H = 5, COAT_BOTTOM = 70; // сегменти від y=30 до y=70
+const TIP_Y = 24;                  // кінчик дроту
+const HANDLE_END = 96;
+// Гнізда для іскор (лівий верхній кут центрального квадратика 2×2), запалюються зліва направо
+const SOCKETS = [[17, 24], [22, 13], [35, 7], [48, 13], [53, 24]];
+
+// Візерунок порошку для кожного сегмента: темно-сірий з золотими й сріблястими крапками
+const SEG_PATTERN = [];
+(function () {
+  const r = rng(777);
+  for (let i = 0; i < SP.SEGS; i++) {
+    const cells = [];
+    for (let y = 0; y < SEG_H; y++) for (let x = 0; x < COAT_W; x++) {
+      const v = r();
+      let col = v < 0.5 ? '#3b3b42' : v < 0.72 ? '#45454d' : v < 0.84 ? '#303036' : v < 0.93 ? '#e2b13c' : '#cfd3dc';
+      if (x === 0 || x === COAT_W - 1) col = v < 0.9 ? '#2c2c32' : col; // темніші краї
+      cells.push(col);
+    }
+    SEG_PATTERN.push(cells);
+  }
+})();
+
+// Нерухомий «вибух» іскор для режиму зменшеного руху
+const STATIC_BURST = [];
+(function () {
+  const r = rng(4242);
+  for (let a = 0; a < 14; a++) {
+    const ang = (a / 14) * Math.PI * 2 + r() * 0.2;
+    const len = 12 + r() * 14;
+    for (let d = 4; d < len; d += 2 + Math.floor(r() * 2)) {
+      STATIC_BURST.push({ x: Math.cos(ang) * d, y: Math.sin(ang) * d * 0.95 + d * d * 0.012, f: 1 - d / len, plus: r() < 0.15 });
+    }
+  }
+})();
+
+const canvas = document.getElementById('spark');
+const ctx = canvas.getContext('2d');
+
+function fill(x, y, w, h, col, a) {
+  ctx.globalAlpha = a == null ? 1 : a;
+  ctx.fillStyle = col;
+  ctx.fillRect(x, y, w, h);
+}
+function plus2(x, y, core, arm, a) { // «плюс» з товщиною 2 пікселі
+  fill(x, y, 2, 2, core, a);
+  fill(x - 2, y, 2, 2, arm, a); fill(x + 2, y, 2, 2, arm, a);
+  fill(x, y - 2, 2, 2, arm, a); fill(x, y + 2, 2, 2, arm, a);
+}
+function plus1(x, y, core, arm, a) {
+  fill(x, y, 1, 1, core, a);
+  fill(x - 1, y, 1, 1, arm, a); fill(x + 1, y, 1, 1, arm, a);
+  fill(x, y - 1, 1, 1, arm, a); fill(x, y + 1, 1, 1, arm, a);
+}
+
+function drawSparkler(now) {
+  const k = SP.k, pal = COLORS[SP.color];
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (SP.horizontal) ctx.setTransform(0, k, -k, 0, SP.H * k, 0); // повертаємо: ручка ліворуч, кінчик праворуч
+  else ctx.setTransform(k, 0, 0, k, 0, 0);
+
+  // Дріт: від кінчика до кінця ручки
+  fill(WIRE_X, TIP_Y, 1, HANDLE_END - TIP_Y, '#d7dbe1');
+  fill(WIRE_X + 1, TIP_Y, 1, HANDLE_END - TIP_Y, '#8a8f97');
+  fill(WIRE_X, HANDLE_END, 2, 1, '#6d7178');
+
+  // Сегменти покриття знизу вгору
+  for (let i = 0; i < SP.SEGS; i++) {
+    const y0 = COAT_BOTTOM - (i + 1) * SEG_H;
+    if (i < SP.filled) {
+      const cells = SEG_PATTERN[i];
+      for (let y = 0; y < SEG_H; y++) for (let x = 0; x < COAT_W; x++) fill(COAT_X + x, y0 + y, 1, 1, cells[y * COAT_W + x]);
+      const t0 = SP.segFlash[i];
+      if (t0 != null && !reducedMotion) {
+        const t = (now - t0) / 380;
+        if (t < 1) fill(COAT_X - 1, y0 - 1, COAT_W + 2, SEG_H + 2, '#ffffff', 1 - t);
+      }
+    } else {
+      // пунктирний контур незаповненого сегмента
+      for (let x = 0; x < COAT_W; x++) {
+        if (x % 2 === 0) fill(COAT_X + x, y0, 1, 1, '#7a7296');
+        if (i === 0 && x % 2 === 1) fill(COAT_X + x, y0 + SEG_H - 1, 1, 1, '#7a7296');
+      }
+      for (let y = 0; y < SEG_H; y++) if (y % 2 === 0) {
+        fill(COAT_X, y0 + y, 1, 1, '#7a7296');
+        fill(COAT_X + COAT_W - 1, y0 + y, 1, 1, '#7a7296');
+      }
+    }
+  }
+
+  // Гнізда для іскор
+  for (let s = 0; s < SP.SOCKETS; s++) {
+    const [x, y] = SOCKETS[s];
+    if (s < SP.lit) {
+      // легке світіння
+      fill(x - 2, y - 2, 2, 2, pal[1], 0.3); fill(x + 2, y - 2, 2, 2, pal[1], 0.3);
+      fill(x - 2, y + 2, 2, 2, pal[1], 0.3); fill(x + 2, y + 2, 2, 2, pal[1], 0.3);
+      fill(x - 4, y, 2, 2, pal[1], 0.3); fill(x + 4, y, 2, 2, pal[1], 0.3);
+      fill(x, y - 4, 2, 2, pal[1], 0.3); fill(x, y + 4, 2, 2, pal[1], 0.3);
+      plus2(x, y, pal[0], pal[1], 1);
+      const t0 = SP.sockFlash[s];
+      if (t0 != null && !reducedMotion) {
+        const t = (now - t0) / 420;
+        if (t < 1) fill(x - 4, y - 4, 10, 10, '#ffffff', 0.8 * (1 - t));
+      }
+    } else {
+      plus2(x, y, '#7a7584', '#55505f', 1);
+    }
+  }
+
+  // Вогник горить
+  if (SP.burning) {
+    const cx = WIRE_X, cy = TIP_Y - 1;
+    fill(COAT_X, COAT_BOTTOM - SP.SEGS * SEG_H, COAT_W, 1, pal[2]); // жарина зверху покриття
+    if (reducedMotion) {
+      STATIC_BURST.forEach(p => {
+        const col = p.f > 0.6 ? pal[0] : p.f > 0.3 ? pal[1] : pal[2];
+        if (p.plus) plus1(Math.round(cx + p.x), Math.round(cy + p.y), col, pal[1], 1);
+        else fill(Math.round(cx + p.x), Math.round(cy + p.y), 1, 1, col, 1);
+      });
+    }
+    SP.parts.forEach(p => {
+      const f = p.life / p.max;
+      const col = f > 0.7 ? pal[0] : f > 0.35 ? pal[1] : pal[2];
+      const a = Math.min(1, f * 1.8);
+      const x = Math.round(p.x), y = Math.round(p.y);
+      if (p.kind === 'plus') plus1(x, y, pal[0], col, a);
+      else fill(x, y, p.kind, p.kind, col, a);
+    });
+    plus1(cx, cy, '#ffffff', pal[0], 1);
+    fill(cx + 1, cy, 1, 1, '#ffffff');
+  }
+  ctx.globalAlpha = 1;
+}
+
+function updateSparkler(dt) {
+  if (!SP.burning || reducedMotion) { SP.parts.length = 0; return; }
+  const big = document.getElementById('stage').classList.contains('final');
+  SP.emitAcc += dt * (big ? 90 : 65);
+  while (SP.emitAcc >= 1 && SP.parts.length < 450) {
+    SP.emitAcc -= 1;
+    const ang = Math.random() * Math.PI * 2;
+    const sp = 14 + Math.random() * 42;
+    const r = Math.random();
+    SP.parts.push({
+      x: WIRE_X + 0.5, y: TIP_Y - 1,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 8,
+      life: 0, max: 0.45 + Math.random() * 0.8,
+      kind: r < 0.18 ? 'plus' : r < 0.5 ? 2 : 1
+    });
+    SP.parts[SP.parts.length - 1].life = SP.parts[SP.parts.length - 1].max;
+  }
+  if (SP.emitAcc > 1) SP.emitAcc = 0;
+  // у горизонтальному режимі «вниз» на екрані — це +x у логічних координатах
+  const gx = SP.horizontal ? 40 : 0, gy = SP.horizontal ? 0 : 40;
+  for (let i = SP.parts.length - 1; i >= 0; i--) {
+    const p = SP.parts[i];
+    p.vx += gx * dt; p.vy += gy * dt;
+    p.vx *= 0.985; p.vy *= 0.985;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.life -= dt;
+    if (p.life <= 0) SP.parts.splice(i, 1);
+  }
+}
+
+let lastT = performance.now();
+function frame(t) {
+  const dt = Math.min(0.05, (t - lastT) / 1000);
+  lastT = t;
+  updateSparkler(dt);
+  drawSparkler(t);
+  requestAnimationFrame(frame);
+}
+
+// Підбирає розмір canvas під контейнер (цілий масштаб k — чіткі пікселі)
+function sizeCanvas() {
+  const wrap = document.getElementById('sparkWrap');
+  const r = wrap.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const dpr = window.devicePixelRatio || 1;
+  const lw = SP.horizontal ? SP.H : SP.W, lh = SP.horizontal ? SP.W : SP.H;
+  const k = Math.max(1, Math.floor(Math.min(r.width * dpr / lw, r.height * dpr / lh)));
+  SP.k = k;
+  canvas.width = lw * k;
+  canvas.height = lh * k;
+  canvas.style.width = (lw * k / dpr / stageScale) + 'px';
+  canvas.style.height = (lh * k / dpr / stageScale) + 'px';
+}
+
+/* =========================================================
+   МАСШТАБУВАННЯ СЦЕНИ 16:9
+   ========================================================= */
+const stage = document.getElementById('stage');
+let stageScale = 1;
+function fitStage() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const narrow = w < 760 || w / h < 1.15;
+  document.documentElement.classList.toggle('narrow', narrow);
+  SP.horizontal = narrow;
+  if (narrow) {
+    stageScale = 1;
+    stage.style.transform = '';
+  } else {
+    stageScale = Math.min(w / 1280, h / 720);
+    const x = (w - 1280 * stageScale) / 2, y = (h - 720 * stageScale) / 2;
+    stage.style.transform = `translate(${x}px, ${y}px) scale(${stageScale})`;
+  }
+  sizeCanvas();
+}
+
+/* =========================================================
+   СТАН ГРИ
+   ========================================================= */
+let screen = 'start';     // start | quiz | mid | match | final
+let qi = 0;               // поточне питання
+let qState = [];          // стан кожного питання
+let match = null;         // стан частини 2
+let toastShown = {};      // які досягнення вже показані
+let matchTimer = null, infoTimer = null, toastTimer = null;
+
+function resetState() {
+  qi = 0;
+  qState = QUESTIONS.map(() => ({ solved: false, wrong: [], hint: false }));
+  match = { found: [], sel: -1, hint: false, order: shuffledOrder(PAIRS.length) };
+  toastShown = {};
+  SP.filled = 0; SP.lit = 0; SP.burning = false; SP.color = 'gold';
+  SP.segFlash = {}; SP.sockFlash = {}; SP.parts = [];
+}
+
+// Перемішуємо значення так, щоб порядок помітно відрізнявся від слів
+function shuffledOrder(n) {
+  let o, same;
+  do {
+    o = [...Array(n).keys()];
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+    same = o.filter((v, i) => v === i).length;
+  } while (same > 1);
+  return o;
+}
+
+/* =========================================================
+   ДОПОМІЖНЕ: блоки MakeCode
+   ========================================================= */
+// "агент розмістити [вниз]" → блок із білим віконцем «вниз»
+function blockHTML(str, cls) {
+  const html = str.replace(/\[([^\]]*)\]/g, (_, t) => `<span class="pill">${t.trim() || '&nbsp;'}</span>`);
+  return `<span class="mc ${cls}">${html}</span>`;
+}
+function loopHTML(counts, depth, hl, inner) {
+  if (depth >= counts.length) return inner ? blockHTML(inner, 'agent small') : '<span class="mc-gap"></span>';
+  return `<div class="mc-loop${depth === hl ? ' hl' : ''}">` +
+    `<div class="mc-head">повторити <span class="pill">${counts[depth]}</span> разів</div>` +
+    `<div class="mc-body">${loopHTML(counts, depth + 1, hl, inner)}</div>` +
+    `<div class="mc-foot"></div></div>`;
+}
+function visualHTML(v) {
+  if (!v) return '';
+  if (v.type === 'block') return `<div class="visual">${blockHTML(v.block, 'agent big')}</div>`;
+  if (v.type === 'loops') {
+    return '<div class="visual">' + v.sets.map(s =>
+      `<figure class="loopset">${s.caption ? `<figcaption>${s.caption}</figcaption>` : ''}${loopHTML(s.counts, 0, s.highlight, s.inner)}</figure>`
+    ).join('') + '</div>';
+  }
+  return '';
+}
+function fingers(n) { return n === 2 ? '1 або 2 пальці' : '1, 2 або 3 пальці'; }
+
+/* =========================================================
+   РЕНДЕР ЕКРАНІВ
+   ========================================================= */
+const left = document.getElementById('left');
+const teacher = document.getElementById('teacher');
+const btnHint = document.getElementById('btnHint');
+const btnShow = document.getElementById('btnShow');
+const btnNext = document.getElementById('btnNext');
+
+function go(name) {
+  screen = name;
+  clearTimeout(matchTimer); clearTimeout(infoTimer);
+  stage.classList.toggle('final', name === 'final');
+  teacher.classList.toggle('off', !(name === 'quiz' || name === 'match'));
+  ({ start: renderStart, quiz: renderQuiz, mid: renderMid, match: renderMatch, final: renderFinal })[name]();
+  updateTeacher();
+  requestAnimationFrame(sizeCanvas);
+}
+
+function renderStart() {
+  left.innerHTML = `
+    <div class="screen-center">
+      <div class="sign big">${TEXT.title}</div>
+      <div class="panel intro">${TEXT.intro}</div>
+      <button class="stone center big-btn" data-act="primary">Почати</button>
+    </div>`;
+}
+
+function renderMid() {
+  left.innerHTML = `
+    <div class="screen-center">
+      <div class="sign big">${TEXT.midTitle}</div>
+      <div class="panel intro">${TEXT.midTitle} ${TEXT.mid}</div>
+      <button class="stone center big-btn" data-act="primary">Далі</button>
+    </div>`;
+}
+
+function renderQuiz() {
+  const q = QUESTIONS[qi], st = qState[qi];
+  const opts = q.options.map((o, i) => {
+    const text = typeof o === 'object' ? o.text : o;
+    let inner;
+    if (q.optionKind === 'agent') inner = blockHTML(text, 'agent big');
+    else inner = (o.icon ? `<span class="mat mat-${o.icon}"></span>` : '') + `<span class="otext">${text}</span>`;
+    return `<button class="stone opt" data-opt="${i}"><span class="badge">${i + 1}</span>${inner}<span class="tick">✔</span></button>`;
+  }).join('');
+  left.innerHTML = `
+    <div class="head-row"><div class="sign">${TEXT.part1}</div><div class="counter">Питання ${qi + 1} з ${QUESTIONS.length}</div></div>
+    <div class="panel qpanel${q.visual && q.visual.side ? ' side' : ''}"><div class="qtext">${q.text}</div>${visualHTML(q.visual)}</div>
+    <div class="hint${st.hint && !st.solved ? '' : ' hidden'}" id="hint">💡 ${q.hint}</div>
+    <div class="instr">✋ Покажи на камеру ${fingers(q.options.length)}</div>
+    <div class="options">${opts}</div>
+    <div class="feedback" id="fb"></div>`;
+  applyQuizState();
+}
+
+// Розставляє класи варіантів відповідно до стану питання
+function applyQuizState() {
+  const q = QUESTIONS[qi], st = qState[qi];
+  left.querySelectorAll('.opt').forEach(b => {
+    const i = +b.dataset.opt;
+    const isCorrect = i === q.correct - 1;
+    b.classList.toggle('correct', st.solved && isCorrect);
+    b.classList.toggle('wrong', st.wrong.includes(i));
+    b.classList.toggle('dim', st.solved && !isCorrect && !st.wrong.includes(i));
+    b.disabled = st.solved || st.wrong.includes(i);
+  });
+  const fb = document.getElementById('fb');
+  if (st.solved) document.getElementById('hint').classList.add('hidden');
+  if (st.solved) fb.innerHTML = `<span class="ok">${TEXT.correct}</span>${q.explain}`;
+}
+
+function renderMatch() {
+  const words = PAIRS.map((p, i) =>
+    `<div class="ore c${i}" data-word="${i}" role="button">` +
+    `<span>${p.en}</span>` +
+    (canSpeak ? `<button class="say" data-say="${i}" title="Послухати" aria-label="Послухати">🔊</button>` : '') +
+    `</div>`).join('');
+  const means = match.order.map(i =>
+    `<div class="mean" data-mean="${i}" role="button"><span><b>${PAIRS[i].ua}</b>: ${PAIRS[i].desc}</span></div>`).join('');
+  left.innerHTML = `
+    <div class="head-row"><div class="sign">${TEXT.part2}</div><div class="counter" id="pairCount"></div></div>
+    <div class="instr">${TEXT.matchInstr}</div>
+    <div class="hint hidden" id="hint"></div>
+    <div class="match"><div class="col">${words}</div><div class="col">${means}</div></div>
+    <div class="feedback" id="fb"></div>`;
+  applyMatchState();
+}
+
+function applyMatchState() {
+  left.querySelectorAll('.ore').forEach(el => {
+    const i = +el.dataset.word;
+    el.classList.toggle('done', match.found.includes(i));
+    el.classList.toggle('sel', match.sel === i);
+  });
+  left.querySelectorAll('.mean').forEach(el => el.classList.toggle('done', match.found.includes(+el.dataset.mean)));
+  document.getElementById('pairCount').textContent = `Пари: ${match.found.length} з ${PAIRS.length}`;
+  const hint = document.getElementById('hint');
+  const hi = hintWord();
+  if (match.hint && hi >= 0) {
+    hint.innerHTML = `💡 <b>${PAIRS[hi].en}</b> — ${PAIRS[hi].hint}`;
+    hint.classList.remove('hidden');
+  } else hint.classList.add('hidden');
+}
+
+function renderFinal() {
+  const slots = Object.keys(COLORS).map(c =>
+    `<button class="slot${SP.color === c ? ' on' : ''}" data-color="${c}" aria-label="${c}"><i style="background:${COLORS[c][1]}"></i></button>`).join('');
+  left.innerHTML = `
+    <div class="screen-center">
+      <div class="sign big">${TEXT.finalTitle}</div>
+      <div class="label">${TEXT.pickColor}</div>
+      <div class="slots">${slots}</div>
+      <div class="wave">${TEXT.wave}</div>
+      <button class="stone center big-btn" data-act="again">${TEXT.again}</button>
+    </div>`;
+}
+
+/* =========================================================
+   ПАНЕЛЬ ВЧИТЕЛЯ
+   ========================================================= */
+function canNext() {
+  if (screen === 'quiz') return qState[qi].solved;
+  if (screen === 'match') return match.found.length === PAIRS.length;
+  return false;
+}
+function updateTeacher() {
+  let hintOn = false, hintOk = false, showOk = false;
+  if (screen === 'quiz') {
+    // після правильної відповіді підказка вже не потрібна
+    hintOk = showOk = !qState[qi].solved; hintOn = qState[qi].hint && hintOk;
+  } else if (screen === 'match') {
+    const left5 = match.found.length < PAIRS.length;
+    hintOk = left5; hintOn = match.hint && left5; showOk = left5;
+  }
+  btnHint.disabled = !hintOk;
+  btnHint.classList.toggle('on', hintOn);
+  btnShow.disabled = !showOk;
+  btnNext.disabled = !canNext();
+}
+
+function onHint() {
+  if (btnHint.disabled) return;
+  if (screen === 'quiz') {
+    const st = qState[qi];
+    st.hint = !st.hint;
+    document.getElementById('hint').classList.toggle('hidden', !st.hint);
+  } else if (screen === 'match') {
+    match.hint = !match.hint;
+    applyMatchState();
+  }
+  updateTeacher();
+}
+
+function onShow() {
+  if (btnShow.disabled) return;
+  if (screen === 'quiz') solveQuestion();
+  else if (screen === 'match') {
+    const i = PAIRS.findIndex((_, j) => !match.found.includes(j));
+    if (i >= 0) foundPair(i);
+  }
+}
+
+function onNext() {
+  if (!canNext()) return;
+  if (screen === 'quiz') {
+    if (qi < QUESTIONS.length - 1) { qi++; go('quiz'); }
+    else go('mid');
+  } else if (screen === 'match') go('final');
+}
+
+function onBack() {
+  if (screen === 'quiz' && qi > 0) { qi--; go('quiz'); }
+  else if (screen === 'mid') { qi = QUESTIONS.length - 1; go('quiz'); }
+  else if (screen === 'match') go('mid');
+}
+
+function primary() {
+  if (screen === 'start') { qi = 0; go('quiz'); }
+  else if (screen === 'mid') go('match');
+}
+
+/* =========================================================
+   ЛОГІКА ЧАСТИНИ 1
+   ========================================================= */
+function answer(i) {
+  const q = QUESTIONS[qi], st = qState[qi];
+  if (st.solved || i >= q.options.length || st.wrong.includes(i)) return;
+  if (i === q.correct - 1) { solveQuestion(); return; }
+  st.wrong.push(i);
+  applyQuizState();
+  shake(left.querySelector(`.opt[data-opt="${i}"]`));
+  document.getElementById('fb').innerHTML = `<span class="try">${TEXT.tryAgain}</span>`;
+}
+
+// Зараховує правильну відповідь (і для кліку, і для «Показати відповідь»)
+function solveQuestion() {
+  const st = qState[qi];
+  if (st.solved) return;
+  st.solved = true;
+  SP.filled = Math.min(SP.SEGS, qState.filter(s => s.solved).length);
+  SP.segFlash[SP.filled - 1] = performance.now();
+  applyQuizState();
+  updateTeacher();
+  if (qState.every(s => s.solved) && !toastShown.filled) {
+    toastShown.filled = true;
+    showToast(TEXT.achFilled);
+  }
+}
+
+/* =========================================================
+   ЛОГІКА ЧАСТИНИ 2
+   ========================================================= */
+function hintWord() {
+  if (match.sel >= 0) return match.sel;
+  return PAIRS.findIndex((_, j) => !match.found.includes(j));
+}
+
+function clickWord(i) {
+  if (match.found.includes(i)) return;
+  match.sel = match.sel === i ? -1 : i;
+  applyMatchState();
+}
+
+function clickMean(i) {
+  if (match.found.includes(i)) return;
+  const fb = document.getElementById('fb');
+  if (match.sel < 0) {
+    fb.innerHTML = `<span class="info">${TEXT.pickWordFirst}</span>`;
+    clearTimeout(infoTimer);
+    infoTimer = setTimeout(() => { if (fb.textContent === TEXT.pickWordFirst) fb.innerHTML = ''; }, 2200);
+    return;
+  }
+  if (match.sel === i) { foundPair(i); return; }
+  // неправильна пара: обидва трусяться, вибір знімається
+  shake(left.querySelector(`.ore[data-word="${match.sel}"]`));
+  shake(left.querySelector(`.mean[data-mean="${i}"]`));
+  match.sel = -1;
+  applyMatchState();
+  fb.innerHTML = `<span class="try">${TEXT.tryAgain}</span>`;
+}
+
+function foundPair(i) {
+  if (match.found.includes(i)) return;
+  match.found.push(i);
+  if (match.sel === i) match.sel = -1;
+  SP.lit = match.found.length;
+  SP.sockFlash[SP.lit - 1] = performance.now();
+  applyMatchState();
+  document.getElementById('fb').innerHTML = `<span class="ok">${TEXT.correct}</span>${PAIRS[i].en} — ${PAIRS[i].ua}`;
+  updateTeacher();
+  if (match.found.length === PAIRS.length) {
+    SP.burning = true;
+    if (!toastShown.lit) { toastShown.lit = true; showToast(TEXT.achLit); }
+    clearTimeout(matchTimer);
+    matchTimer = setTimeout(() => { if (screen === 'match') go('final'); }, 1500);
+  }
+}
+
+/* =========================================================
+   ЕФЕКТИ
+   ========================================================= */
+function shake(el) {
+  if (!el || reducedMotion) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;            // перезапуск анімації
+  el.classList.add('shake');
+  el.addEventListener('animationend', () => el.classList.remove('shake'), { once: true });
+}
+
+function showToast(text) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = text;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* Озвучка англійських слів */
+const canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+function say(word) {
+  if (!canSpeak) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang = 'en-US';
+  u.rate = 0.85;
+  const v = speechSynthesis.getVoices().find(v => v.lang === 'en-US') ||
+            speechSynthesis.getVoices().find(v => /^en/i.test(v.lang));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+
+/* =========================================================
+   ПОДІЇ
+   ========================================================= */
+left.addEventListener('click', e => {
+  const t = e.target;
+  const sayBtn = t.closest('[data-say]');
+  if (sayBtn) { e.stopPropagation(); say(PAIRS[+sayBtn.dataset.say].en); return; }
+  const opt = t.closest('[data-opt]');
+  if (opt && screen === 'quiz') { answer(+opt.dataset.opt); return; }
+  const w = t.closest('[data-word]');
+  if (w && screen === 'match') { clickWord(+w.dataset.word); return; }
+  const m = t.closest('[data-mean]');
+  if (m && screen === 'match') { clickMean(+m.dataset.mean); return; }
+  const c = t.closest('[data-color]');
+  if (c) {
+    SP.color = c.dataset.color;
+    left.querySelectorAll('.slot').forEach(s => s.classList.toggle('on', s === c));
+    return;
+  }
+  const act = t.closest('[data-act]');
+  if (act) {
+    if (act.dataset.act === 'primary') primary();
+    if (act.dataset.act === 'again') { resetState(); go('start'); }
+  }
+});
+btnHint.addEventListener('click', onHint);
+btnShow.addEventListener('click', onShow);
+btnNext.addEventListener('click', onNext);
+
+// Після кліку мишею знімаємо фокус, щоб Пробіл не «натискав» кнопку вдруге
+document.addEventListener('click', () => {
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+});
+
+// Гарячі клавіші (event.code — працюють за будь-якої розкладки)
+const DIGITS = { Digit1: 0, Digit2: 1, Digit3: 2, Numpad1: 0, Numpad2: 1, Numpad3: 2 };
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const c = e.code;
+  if (c in DIGITS) {
+    if (screen === 'quiz' && !e.repeat) answer(DIGITS[c]);
+    return;
+  }
+  if (c === 'Space') {
+    e.preventDefault();
+    if (e.repeat) return;
+    if (screen === 'quiz' || screen === 'match') { canNext() ? onNext() : onShow(); }
+    else primary();
+  } else if (c === 'KeyH') {
+    if (!e.repeat) onHint();
+  } else if (c === 'ArrowRight') {
+    e.preventDefault();
+    if (screen === 'start' || screen === 'mid') primary(); else onNext();
+  } else if (c === 'ArrowLeft') {
+    e.preventDefault();
+    onBack();
+  }
+});
+
+window.addEventListener('resize', fitStage);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeCanvas);
+
+/* Старт */
+resetState();
+fitStage();
+go('start');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
