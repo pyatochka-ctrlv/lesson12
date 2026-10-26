@@ -7,14 +7,14 @@
 <!-- Шрифти з Google Fonts. Якщо не завантажаться — спрацюють системні запасні шрифти. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tiny5&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
    БАЗОВІ ЗМІННІ
    ========================================================= */
 :root{
   --night:#1a1430;
-  --px:'Tiny5','Courier New',ui-monospace,monospace;   /* піксельний шрифт */
+  --px:'Press Start 2P','Courier New',ui-monospace,monospace;   /* піксельний шрифт */
   --sans:'Nunito','Segoe UI',Roboto,Arial,sans-serif;          /* читабельний шрифт */
   --ink:#1e1e1e;
   --wood-ink:#2a1808;
@@ -45,7 +45,7 @@ button{font:inherit;color:inherit}
 /* Кам'яна кнопка, як у меню */
 .stone{
   position:relative;display:flex;align-items:center;gap:14px;
-  font-family:var(--px);font-weight:400;font-size:28px;color:#fff;text-align:left;
+  font-family:var(--px);font-weight:400;font-size:18px;line-height:1.5;color:#fff;text-align:left;
   text-shadow:2px 2px 0 #333;
   background-color:#7e7e7e;background-image:var(--tex-stone);background-size:48px 48px;
   border:3px solid #111;
@@ -66,7 +66,7 @@ button{font:inherit;color:inherit}
 .badge{
   flex:none;width:46px;height:46px;display:grid;place-items:center;
   background:#8b8b8b;box-shadow:inset 3px 3px 0 #373737,inset -3px -3px 0 #fff;
-  font-size:32px;line-height:1;color:#fff;text-shadow:2px 2px 0 #3f3f3f;
+  font-size:22px;line-height:1;color:#fff;text-shadow:2px 2px 0 #3f3f3f;
 }
 
 /* Вікно інвентаря (панель питання) */
@@ -80,7 +80,7 @@ button{font:inherit;color:inherit}
 /* Дерев'яна табличка */
 .sign{
   display:inline-block;align-self:flex-start;
-  font-family:var(--px);font-weight:400;font-size:30px;color:#fff;
+  font-family:var(--px);font-weight:400;font-size:19px;line-height:1.4;color:#fff;
   text-shadow:2px 2px 0 #2a1808,-1px -1px 0 #2a1808,1px -1px 0 #2a1808,-1px 1px 0 #2a1808;
   background-color:#a4834f;background-image:var(--tex-oak);background-size:48px 48px;
   border:3px solid #3a2610;
@@ -101,7 +101,7 @@ button{font:inherit;color:inherit}
    ЕКРАНИ
    ========================================================= */
 .head-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none}
-.counter{font-family:var(--px);font-size:26px;color:#e2d9ff;text-shadow:2px 2px 0 #000}
+.counter{font-family:var(--px);font-size:16px;color:#e2d9ff;text-shadow:2px 2px 0 #000}
 .qpanel{flex:none}
 .qtext{font-size:29px;font-weight:900;line-height:1.22}
 .qpanel.side{display:flex;align-items:center;gap:22px}
@@ -119,8 +119,8 @@ button{font:inherit;color:inherit}
 .opt.wrong{filter:brightness(.5) saturate(.5)}
 .opt.dim{opacity:.55}
 .feedback{min-height:34px;font-size:24px;font-weight:800;line-height:1.25;flex:none}
-.feedback .ok{font-family:var(--px);font-weight:400;font-size:27px;color:var(--ok);text-shadow:2px 2px 0 #000;margin-right:10px}
-.feedback .try{font-family:var(--px);font-weight:400;font-size:27px;color:#ffcf6e;text-shadow:2px 2px 0 #000}
+.feedback .ok{font-family:var(--px);font-weight:400;font-size:18px;color:var(--ok);text-shadow:2px 2px 0 #000;margin-right:10px}
+.feedback .try{font-family:var(--px);font-weight:400;font-size:18px;color:#ffcf6e;text-shadow:2px 2px 0 #000}
 .feedback .info{color:#ffe08a}
 
 /* Матеріали (маленькі піксельні блоки) */
@@ -150,16 +150,16 @@ button{font:inherit;color:inherit}
 
 /* Старт / проміжний / фінал */
 .intro{font-size:28px;font-weight:800;line-height:1.35}
-.big-btn{align-self:flex-start;min-width:280px;font-size:30px;min-height:64px}
+.big-btn{align-self:flex-start;min-width:280px;font-size:20px;min-height:64px}
 .screen-center{margin:auto 0;display:flex;flex-direction:column;gap:22px}
-.sign.big{font-size:34px;padding:10px 26px}
+.sign.big{font-size:22px;padding:12px 24px}
 
 /* Частина 2: знайди пару */
 .match{display:grid;grid-template-columns:230px 1fr;gap:14px;flex:none;padding:4px}
 .col{display:flex;flex-direction:column;gap:8px}
 .ore{
   position:relative;height:64px;display:flex;align-items:center;padding:0 46px 0 16px;cursor:pointer;
-  font-family:var(--px);font-weight:400;font-size:32px;
+  font-family:var(--px);font-weight:400;font-size:19px;
   text-shadow:2px 2px 0 #000,-1px -1px 0 #000,0 0 6px #000;
   background-color:#7e7e7e;background-size:64px 64px;
   border:3px solid #111;box-shadow:inset 3px 3px 0 rgba(255,255,255,.45),inset -3px -4px 0 rgba(0,0,0,.45);
@@ -199,7 +199,7 @@ button{font:inherit;color:inherit}
 .slot.on{outline:5px solid #fff;outline-offset:2px}
 .slot:focus{outline-color:transparent}
 .slot.on:focus{outline:5px solid #fff}
-.wave{font-family:var(--px);font-weight:400;font-size:44px;line-height:1.2;text-shadow:3px 3px 0 #000}
+.wave{font-family:var(--px);font-weight:400;font-size:25px;line-height:1.5;text-shadow:3px 3px 0 #000}
 .label{font-size:26px;font-weight:800}
 
 /* =========================================================
@@ -211,7 +211,7 @@ button{font:inherit;color:inherit}
   border-top:3px solid #0c0c0c;box-shadow:inset 0 3px 0 #5a5a63;
 }
 #teacher.off{visibility:hidden}
-.tbtn{min-height:56px;font-size:27px;padding:6px 26px;justify-content:center}
+.tbtn{min-height:56px;font-size:16px;padding:6px 26px;justify-content:center}
 .tbtn.on::before{background:rgba(255,213,74,.3)}
 .tbtn:disabled{opacity:.4;filter:grayscale(1)}
 #stage.final #teacher{display:none}
@@ -229,8 +229,8 @@ button{font:inherit;color:inherit}
 #toast.show{transform:none}
 #toast .ico{flex:none;width:52px;height:52px;display:grid;place-items:center;font-size:30px;
   background:#8b8b8b;box-shadow:inset 3px 3px 0 #373737,inset -3px -3px 0 #fff}
-#toast .t1{font-family:var(--px);font-size:24px;color:#ffff55;text-shadow:2px 2px 0 #3f3f00}
-#toast .t2{font-family:var(--px);font-size:24px;color:#fff;text-shadow:2px 2px 0 #333;margin-top:2px}
+#toast .t1{font-family:var(--px);font-size:15px;line-height:1.4;color:#ffff55;text-shadow:2px 2px 0 #3f3f00}
+#toast .t2{font-family:var(--px);font-size:15px;line-height:1.4;color:#fff;text-shadow:2px 2px 0 #333;margin-top:2px}
 
 /* Легке потрушування */
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
@@ -253,11 +253,11 @@ html.narrow #left{overflow:visible;padding:12px 14px}
 html.narrow .qpanel.side{flex-direction:column;align-items:flex-start}
 html.narrow .match{grid-template-columns:1fr 1.6fr}
 html.narrow #teacher{position:sticky;bottom:0;height:auto;padding:8px;gap:8px;flex-wrap:wrap}
-html.narrow .tbtn{font-size:20px;padding:6px 12px}
+html.narrow .tbtn{font-size:13px;padding:6px 12px}
 html.narrow #toast{width:auto;left:16px}
-html.narrow .stone{font-size:22px}
+html.narrow .stone{font-size:15px}
 html.narrow .qtext{font-size:26px}
-html.narrow .sign{font-size:24px}
+html.narrow .sign{font-size:15px}
 </style>
 </head>
 <body>
